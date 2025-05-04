@@ -9,6 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.2.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Real-time-Chat.Application\Real-time-Chat.Application.csproj" />
+    <ProjectReference Include="..\Real-time-Chat.Infrastructure\Real-time-Chat.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

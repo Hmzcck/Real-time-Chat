@@ -19,7 +19,6 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
         // Composite Key
         builder.Entity<UserChat>()
             .HasKey(uc => new { uc.UserId, uc.ChatId });

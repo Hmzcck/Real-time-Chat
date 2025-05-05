@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using Real_time_Chat.Infrastructure;
 using Real_time_Chat.Application;
 using Scalar.AspNetCore;
+using Real_time_Chat.WebApi.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,7 +54,6 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 // Middleware'ler
-app.UseExceptionHandler();
 app.UseStatusCodePages();
 
 app.MapOpenApi();
@@ -62,6 +62,10 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAllOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map minimal API endpoints
+app.MapAuthEndpoints();
+
 app.MapControllers();
 
 app.Run();

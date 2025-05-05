@@ -1,26 +1,25 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Real_time_Chat.Application.Interfaces;
-using Real_time_Chat.Application.Services;
 using Real_time_Chat.Domain.Entities;
 
 namespace Real_time_Chat.Application.Authentication.Commands
 {
     public sealed record RegiserCommand : IRequest<RegisterCommandResponse>
     {
+        public string UserName { get; init; } = string.Empty;
         public string Email { get; init; } = string.Empty;
         public string Password { get; init; } = string.Empty;
     };
 
     public sealed record RegisterCommandResponse
     {
-        public Guid Id { get; init; } = default!;
+        public Guid Id { get; init; } = Guid.Empty;
+        public string UserName { get; init; } = string.Empty;
         public string Email { get; init; } = string.Empty;
         public string AvatarPath { get; init; } = string.Empty;
     }
-    
-    internal sealed class RegisterCommandHanler(UserManager<User> userManager,
-        IJwtService jwtService, IApplicationDbContext applicationDbContext) : IRequestHandler<RegiserCommand, RegisterCommandResponse>
+
+    internal sealed class RegisterCommandHanler(UserManager<User> userManager) : IRequestHandler<RegiserCommand, RegisterCommandResponse>
     {
         public async Task<RegisterCommandResponse> Handle(RegiserCommand request, CancellationToken cancellationToken)
         {

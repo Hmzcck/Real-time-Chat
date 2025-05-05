@@ -6,27 +6,33 @@ using Real_time_Chat.Domain.Entities;
 namespace Real_time_Chat.Application.Authentication.Commands;
 
 public sealed record LoginCommand(
-    string Email,
+    string UserNameOrEmail,
     string Password
 ) : IRequest<LoginCommandResponse>;
 
 
 public sealed record LoginCommandResponse
 {
-    public string Token { get; init; } = default!;
-    public string AvatarPath { get; init; } = default!;
-    public string Email { get; init; } = default!;
+    public string Token { get; init; } = string.Empty;
+    public string AvatarPath { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string UserName { get; init; } = string.Empty;
 }
 
 
-internal sealed class LoginCommandHandler(UserManager<User> userManager,
-IJwtService jwtService,
+internal sealed class LoginCommandHandler(UserManager<User> userManager, IJwtService jwtService,
 SignInManager<User> signInManager) : IRequestHandler<LoginCommand, LoginCommandResponse>
 {
 
-       public async Task<LoginCommandResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<LoginCommandResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByEmailAsync(request.Email);
+        var user = await userManager.FindByEmailAsync(request.UserNameOrEmail);
+
+        if (user is null)
+        {
+            user = await userManager.FindByNameAsync(request.UserNameOrEmail);
+        }
+
         if (user is null)
         {
             throw new UnauthorizedAccessException("Invalid email or password");
@@ -48,7 +54,7 @@ SignInManager<User> signInManager) : IRequestHandler<LoginCommand, LoginCommandR
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
-        var token = await jwtService.CreateTokenAsync(user);
+        var token = await jwtService.CreateTokenAsync(user, cancellationToken);
 
         return new LoginCommandResponse
         {

@@ -31,12 +31,13 @@ ICurrentUserService currentUserService) : IRequestHandler<CreateChatCommand, Cre
 
         // Add creator and initial members
         var members = request.InitialMemberIds
-            .Union(new[] { creatorId })
+            .Union([creatorId])
             .Distinct()
             .Select(userId => new UserChat
             {
                 UserId = userId,
-                ChatId = chat.Id
+                ChatId = chat.Id,
+                JoinedAt = DateTimeOffset.UtcNow
             })
             .ToList();
 

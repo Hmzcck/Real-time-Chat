@@ -7,8 +7,7 @@ namespace Real_time_Chat.Application.Features.Messages.Commands;
 
 public sealed record SendMessageCommand(
     string Content,
-    Guid ChatId,
-    Guid SenderId) : IRequest<SendMessageCommandResponse>;
+    Guid ChatId) : IRequest<SendMessageCommandResponse>;
 
 public sealed record SendMessageCommandResponse
 {
@@ -19,14 +18,17 @@ public sealed record SendMessageCommandResponse
     public Guid ChatId { get; set; }
 }
 
-internal sealed class SendMessageCommandHandler(IApplicationDbContext applicationDbContext) : IRequestHandler<SendMessageCommand, SendMessageCommandResponse>
+internal sealed class SendMessageCommandHandler(IApplicationDbContext applicationDbContext,
+ICurrentUserService currentUserService) : IRequestHandler<SendMessageCommand, SendMessageCommandResponse>
 {
     public async Task<SendMessageCommandResponse> Handle(SendMessageCommand request, CancellationToken cancellationToken)
     {
+        var senderId = currentUserService.UserId;
+
         // Verify chat exists and user is a member
         var isUserInChat = await applicationDbContext.UserChats
             .AnyAsync(uc => uc.ChatId == request.ChatId &&
-                           uc.UserId == request.SenderId,
+                           uc.UserId == senderId,
                     cancellationToken);
 
         if (!isUserInChat)
@@ -38,7 +40,7 @@ internal sealed class SendMessageCommandHandler(IApplicationDbContext applicatio
         {
             Content = request.Content,
             ChatId = request.ChatId,
-            SenderId = request.SenderId,
+            SenderId = senderId,
             SendAt = DateTimeOffset.UtcNow
         };
 

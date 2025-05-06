@@ -12,6 +12,7 @@ public sealed record GetChatsQueryResponse
     public string Name { get; set; } = string.Empty;
     public bool IsPrivate { get; set; }
     public DateTimeOffset? LastMessageAt { get; set; }
+    public string? LastMessage { get; set; }
     public int MemberCount { get; set; }
 }
 
@@ -31,11 +32,15 @@ ICurrentUserService currentUserService) : IRequestHandler<GetChatsQuery, List<Ge
                 IsPrivate = c.IsPrivate,
                 LastMessageAt = c.Messages
                     .OrderByDescending(m => m.SendAt)
-                    .Select(m => m.SendAt)
+                    .Select(m => (DateTimeOffset?)m.SendAt)
+                    .FirstOrDefault(),
+                LastMessage = c.Messages
+                    .OrderByDescending(m => m.SendAt)
+                    .Select(m => m.Content)
                     .FirstOrDefault(),
                 MemberCount = c.UserChats.Count
             })
-            .OrderByDescending(c => c.LastMessageAt)
+            .OrderByDescending(c => c.LastMessageAt ?? DateTimeOffset.MinValue) // Handles nulls
             .ToListAsync(cancellationToken);
     }
 }

@@ -42,7 +42,8 @@ ICurrentUserService currentUserService) : IRequestHandler<AddUserToChatCommand, 
         var userChat = new UserChat
         {
             ChatId = request.ChatId,
-            UserId = request.UserId
+            UserId = request.UserId,
+            JoinedAt = DateTimeOffset.UtcNow
         };
 
         applicationDbContext.UserChats.Add(userChat);

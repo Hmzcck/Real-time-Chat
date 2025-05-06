@@ -5,6 +5,7 @@ using Real_time_Chat.Infrastructure;
 using Real_time_Chat.Application;
 using Scalar.AspNetCore;
 using Real_time_Chat.WebApi.Endpoints;
+using Real_time_Chat.WebApi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,11 +22,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAllOrigins",
         builder =>
         {
-            builder.AllowAnyOrigin()
+            builder.SetIsOriginAllowed(_ => true)
                    .AllowAnyMethod()
-                   .AllowAnyHeader();
+                   .AllowAnyHeader()
+                   .AllowCredentials();
         });
 });
+
+// Add SignalR and Redis services
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<UserConnectionManager>();
 
 // Add Application Layer Services
 builder.Services.AddApplication();
@@ -49,6 +55,9 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapChatEndpoints();
 app.MapMessageEndpoints();
+
+// Map SignalR hub
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
 

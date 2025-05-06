@@ -1,9 +1,11 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Real_time_Chat.Application.Features.Messages.Commands;
 using Real_time_Chat.Application.Features.Messages.Queries;
 
 namespace Real_time_Chat.WebApi.Endpoints;
 
+[Authorize]
 public static class MessagesEndpoints
 {
     public static void MapMessageEndpoints(this IEndpointRouteBuilder routes)

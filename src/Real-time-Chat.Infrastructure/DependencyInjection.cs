@@ -20,6 +20,12 @@ namespace Real_time_Chat.Infrastructure
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("PostgreSQL")));
 
+            // Redis Configuration
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetConnectionString("Redis");
+            });
+
             services.AddScoped<IApplicationDbContext, ApplicationDbContext>(provider =>
                 provider.GetRequiredService<ApplicationDbContext>());
 

@@ -8,24 +8,6 @@ using Real_time_Chat.WebApi.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            var errors = context.ModelState
-                .Where(e => e.Value?.Errors.Count > 0)
-                .Select(e => new
-                {
-                    Field = e.Key,
-                    Message = e.Value?.Errors.First().ErrorMessage
-                });
-
-            return new BadRequestObjectResult(new { message = "Validation failed", errors });
-        };
-    });
-
 // Configure ProblemDetails
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi("v1", options =>
@@ -65,8 +47,8 @@ app.UseAuthorization();
 
 // Map minimal API endpoints
 app.MapAuthEndpoints();
-
-app.MapControllers();
+app.MapChatEndpoints();
+app.MapMessageEndpoints();
 
 app.Run();
 

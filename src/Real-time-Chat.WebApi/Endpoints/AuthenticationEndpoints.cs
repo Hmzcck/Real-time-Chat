@@ -29,7 +29,10 @@ public static class AuthenticationEndpoints
             }
         })
         .WithName("Login")
-        .WithDescription("Authenticates a user and returns a JWT token");
+        .WithDescription("Authenticates a user and returns a JWT token")
+        .Produces<LoginCommandResponse>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // Register endpoint
         group.MapPost("/register", async (RegiserCommand request, IMediator mediator) =>
@@ -45,6 +48,8 @@ public static class AuthenticationEndpoints
             }
         })
         .WithName("Register")
-        .WithDescription("Registers a new user");
+        .WithDescription("Registers a new user")
+        .Produces<RegisterCommandResponse>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 }

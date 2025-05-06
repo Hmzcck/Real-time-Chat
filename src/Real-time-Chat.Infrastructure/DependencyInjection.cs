@@ -47,11 +47,13 @@ namespace Real_time_Chat.Infrastructure
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-                .AddJwtBearer();
+            }).AddJwtBearer();
+
+            services.AddAuthorization();
 
             // Service Registration
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             return services;
         }

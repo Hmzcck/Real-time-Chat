@@ -21,7 +21,11 @@ public static class AuthenticationEndpoints
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Results.Unauthorized();
+
+                return Results.Problem(
+                    detail: ex.Message,
+                    title: "Authentication failed",
+                    statusCode: StatusCodes.Status401Unauthorized);
             }
             catch (Exception ex)
             {

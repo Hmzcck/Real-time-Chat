@@ -32,7 +32,7 @@ namespace Real_time_Chat.Application.Authentication.Commands
             var user = new User
             {
                 Email = request.Email,
-                UserName = request.Email,
+                UserName = request.UserName,
                 AvatarPath = "default.png"
             };
 
@@ -46,6 +46,7 @@ namespace Real_time_Chat.Application.Authentication.Commands
             {
                 Id = user.Id,
                 Email = user.Email,
+                UserName = user.UserName,
                 AvatarPath = user.AvatarPath
             };
         }

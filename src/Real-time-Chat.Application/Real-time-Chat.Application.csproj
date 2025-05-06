@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Real-time-Chat.Domain\Real-time-Chat.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features/Messages/" />
+  </ItemGroup>
+
 </Project>

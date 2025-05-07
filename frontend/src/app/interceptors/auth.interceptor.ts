@@ -5,10 +5,10 @@ import { catchError, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthenticationService);
-  
+  const isAuthRequest = request.url.includes('/login') || request.url.includes('/register');
   // Add auth header if user is logged in
   const currentUser = authService.currentUserValue;
-  if (currentUser?.token) {
+  if (currentUser?.token && !isAuthRequest) {
     request = request.clone({
       setHeaders: {
         Authorization: `Bearer ${currentUser.token}`
@@ -24,7 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
         location.reload();
       }
       
-      const errorMessage = error.error?.detail || error.statusText;
+      const errorMessage = error.error?.detail ?? error.statusText;
       return throwError(() => errorMessage);
     })
   );

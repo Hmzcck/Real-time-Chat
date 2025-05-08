@@ -16,5 +16,22 @@ public sealed class JwtSettingsSetup(IOptions<JwtSettings> jwtSettings) : IPostC
         options.TokenValidationParameters.ValidIssuer = jwtSettings.Value.Issuer;
         options.TokenValidationParameters.ValidAudience = jwtSettings.Value.Audience;
         options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Value.Secret));
+
+        // For SignalR
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/chatHub"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     }
 }

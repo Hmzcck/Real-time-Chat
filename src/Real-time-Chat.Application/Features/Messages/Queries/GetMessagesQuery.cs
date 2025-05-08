@@ -9,6 +9,7 @@ public sealed record GetMessagesQuery(Guid ChatId) : IRequest<List<GetMessageQue
 public sealed record GetMessageQueryResponse
 {
     public Guid SenderId { get; set; }
+    public string SenderUserName { get; set; } = string.Empty;
     public Guid ChatId { get; set; }
     public DateTimeOffset SendAt { get; set; }
     public string Content { get; set; } = string.Empty;
@@ -24,6 +25,7 @@ internal sealed class GetMessagesQueryHandler(IApplicationDbContext applicationD
             .Select(m => new GetMessageQueryResponse
             {
                 SenderId = m.SenderId,
+                SenderUserName = m.Sender.UserName!,
                 ChatId = m.ChatId,
                 SendAt = m.SendAt,
                 Content = m.Content

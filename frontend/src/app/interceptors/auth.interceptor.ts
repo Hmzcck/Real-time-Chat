@@ -24,8 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
         location.reload();
       }
       
-      const errorMessage = error.error?.detail ?? error.statusText;
-      return throwError(() => errorMessage);
+      return throwError(() => error);
     })
   );
 };

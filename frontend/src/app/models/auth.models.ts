@@ -3,6 +3,7 @@ export type LoginResponse = {
     avatarPath: string;
     email: string;
     userName: string;
+    userId : string;
   }
   
   export type RegisterResponse = {

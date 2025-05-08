@@ -3,16 +3,19 @@ using MediatR;
 using Real_time_Chat.Application.Features.Messages.Commands;
 using Real_time_Chat.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Real_time_Chat.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Real_time_Chat.WebApi.Hubs;
 
-// [Authorize]
+[Authorize]
 public class ChatHub(IMediator _mediator,
-UserConnectionManager _connectionManager, ICurrentUserService _currentUserService) : Hub
+UserConnectionManager _connectionManager, ICurrentUserService _currentUserService, UserManager<User> userManager) : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        var userId = _currentUserService.UserId;
+        var userId = Guid.Parse(userManager.GetUserId(Context.User));
         await _connectionManager.SaveConnectionAsync(userId, Context.ConnectionId);
         await Clients.All.SendAsync("UserOnline", userId);
         await base.OnConnectedAsync();
@@ -20,7 +23,7 @@ UserConnectionManager _connectionManager, ICurrentUserService _currentUserServic
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var userId = _currentUserService.UserId;
+        var userId = Guid.Parse(userManager.GetUserId(Context.User));
         await _connectionManager.RemoveConnectionAsync(userId, Context.ConnectionId);
 
         // Only notify if user has no other active connections
@@ -42,13 +45,28 @@ UserConnectionManager _connectionManager, ICurrentUserService _currentUserServic
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
     }
 
+    private async Task<List<Guid>> GetChatParticipantIds(Guid chatId)
+    {
+        // TODO use repository pattern
+        var db = Context.GetHttpContext().RequestServices.GetRequiredService<IApplicationDbContext>();
+        return await db.UserChats
+            .Where(uc => uc.ChatId == chatId)
+            .Select(uc => uc.UserId)
+            .ToListAsync();
+    }
+
     public async Task SendMessage(Guid chatId, string content)
     {
         var command = new SendMessageCommand(content, chatId);
         var result = await _mediator.Send(command);
 
-        // Send to all connections in the chat group
-        await Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", result);
+        // Get all user connections in the chat
+        var connections = await _connectionManager.GetChatUserConnectionsAsync(chatId, GetChatParticipantIds);
+
+        foreach (var connectionId in connections)
+        {
+            await Clients.Client(connectionId).SendAsync("ReceiveMessage", result);
+        }
     }
 
     public async Task UserTyping(Guid chatId, string username)

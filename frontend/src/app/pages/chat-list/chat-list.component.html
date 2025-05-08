@@ -1,0 +1,63 @@
+<div class="chat-container">
+  <!-- Kullanıcı listesi -->
+  <mat-card class="user-list">
+    <mat-card-title>Kullanıcılar</mat-card-title>
+    <mat-nav-list>
+      <mat-list-item
+        *ngFor="let user of users"
+        (click)="onUserClick(user)"
+        style="cursor: pointer"
+      >
+        <img matListAvatar [src]="user.avatarPath" alt="{{ user.userName }}" />
+        <div matLine>{{ user.userName }}</div>
+        <mat-icon
+          matSuffix
+          [ngStyle]="{ color: user.isOnline ? '#4caf50' : '#9e9e9e' }"
+          fontIcon="circle"
+        ></mat-icon>
+      </mat-list-item>
+    </mat-nav-list>
+  </mat-card>
+
+  <!-- Sohbet penceresi -->
+  <div class="chat-window" *ngIf="selectedChat">
+    <div class="messages">
+      <div
+        *ngFor="let msg of messages"
+        [ngClass]="{
+          'message-row': true,
+          'my-message': msg.senderId === currentUserId,
+          'their-message': msg.senderId !== currentUserId
+        }"
+      >
+        <mat-card class="message-bubble">
+          <div class="message-author">
+            {{ msg.senderUserName }}
+          </div>
+          <div class="message-text">
+            {{ msg.content }}
+          </div>
+        </mat-card>
+      </div>
+    </div>
+
+    <div class="send-box">
+      <mat-form-field class="message-input" appearance="outline">
+        <input
+          matInput
+          [(ngModel)]="newMessage"
+          (keydown.enter)="sendMessage()"
+          placeholder="Mesajınızı yazın..."
+        />
+      </mat-form-field>
+      <button
+        mat-icon-button
+        color="primary"
+        (click)="sendMessage()"
+        [disabled]="!newMessage.trim()"
+      >
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

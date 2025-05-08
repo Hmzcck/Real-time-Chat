@@ -13,6 +13,7 @@ public sealed record LoginCommand(
 
 public sealed record LoginCommandResponse
 {
+    public Guid UserId { get; init; }
     public string Token { get; init; } = string.Empty;
     public string AvatarPath { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
@@ -58,6 +59,8 @@ SignInManager<User> signInManager) : IRequestHandler<LoginCommand, LoginCommandR
 
         return new LoginCommandResponse
         {
+            UserId = user.Id,
+            UserName = user.UserName!,
             Token = token,
             AvatarPath = user.AvatarPath,
             Email = user.Email!

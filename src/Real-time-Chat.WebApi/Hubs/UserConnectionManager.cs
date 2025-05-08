@@ -64,4 +64,19 @@ public class UserConnectionManager(IDistributedCache _cache)
         var connections = await GetUserConnectionsAsync(userId);
         return connections.Count > 0;
     }
+
+    public async Task<List<string>> GetChatUserConnectionsAsync(Guid chatId, Func<Guid, Task<List<Guid>>> getChatParticipantIds)
+    {
+        var connections = new List<string>();
+        var participantIds = await getChatParticipantIds(chatId);
+
+        foreach (var userId in participantIds)
+        {
+            var userConnections = await GetUserConnectionsAsync(userId);
+            connections.AddRange(userConnections);
+        }
+
+        return connections;
+    }
+
 }

@@ -15,6 +15,7 @@ public sealed record SendMessageCommandResponse
     public string Content { get; set; } = string.Empty;
     public DateTimeOffset SendAt { get; set; }
     public Guid SenderId { get; set; }
+    public string SenderUserName { get; set; } = string.Empty;
     public Guid ChatId { get; set; }
 }
 
@@ -56,6 +57,7 @@ ICurrentUserService currentUserService) : IRequestHandler<SendMessageCommand, Se
                 Content = m.Content,
                 SendAt = m.SendAt,
                 SenderId = m.SenderId,
+                SenderUserName = m.Sender.UserName!,
                 ChatId = m.ChatId
             })
             .FirstOrDefaultAsync(cancellationToken) ?? new SendMessageCommandResponse();

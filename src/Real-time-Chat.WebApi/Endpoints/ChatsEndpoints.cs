@@ -106,5 +106,23 @@ public static class ChatsEndpoints
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        group.MapGet("/private/{userId}", async(Guid UserId, IMediator mediator) =>
+        {
+            try
+            {
+                var result = await mediator.Send(new GetPrivateChatWithUserQuery(UserId));
+                return result is not null ? Results.Ok(result) : Results.NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+            }
+        })
+        .WithName("GetPrivateChatWithUser")
+        .WithDescription("Returns the private chat with the specified user")
+        .Produces<GetChatDetailsQueryResponse>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 }

@@ -38,16 +38,23 @@ export class SignalRService {
       this.messageReceivedSource.next(message);
     });
 
-    this.hubConnection.on('UserConnected', (userId: string) => {
+    this.hubConnection.on('UserOnline', (userId: string) => {
       const currentStatus = this.userStatusSource.value;
       this.userStatusSource.next({ ...currentStatus, [userId]: true });
     });
 
-    this.hubConnection.on('UserDisconnected', (userId: string) => {
+    this.hubConnection.on('UserOffline', (userId: string) => {
       const currentStatus = this.userStatusSource.value;
       this.userStatusSource.next({ ...currentStatus, [userId]: false });
     });
+
+    this.hubConnection.on('OnlineUsersList', (userIds: string[]) => {
+      const statusMap: { [key: string]: boolean } = {};
+      userIds.forEach(id => statusMap[id] = true);
+      this.userStatusSource.next(statusMap);
+    });
   }
+  
 
   async start(): Promise<void> {
     try {

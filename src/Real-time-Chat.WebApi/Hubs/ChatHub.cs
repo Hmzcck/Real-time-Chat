@@ -16,17 +16,33 @@ UserConnectionManager _connectionManager, ICurrentUserService _currentUserServic
     public override async Task OnConnectedAsync()
     {
         var userId = Guid.Parse(userManager.GetUserId(Context.User));
+
         await _connectionManager.SaveConnectionAsync(userId, Context.ConnectionId);
-        await Clients.All.SendAsync("UserOnline", userId);
+
+        await Clients.Others.SendAsync("UserOnline", userId);
+
+        var onlineUsers = await _connectionManager.GetAllOnlineUsersAsync();
+
+        onlineUsers = onlineUsers.Where(id => id != userId).ToList();
+
+        await Clients.Caller.SendAsync("OnlineUsersList", onlineUsers);
+
         await base.OnConnectedAsync();
     }
 
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var userId = Guid.Parse(userManager.GetUserId(Context.User));
-        await _connectionManager.RemoveConnectionAsync(userId, Context.ConnectionId);
+        var userIdString = userManager.GetUserId(Context.User);
 
-        // Only notify if user has no other active connections
+        if (string.IsNullOrEmpty(userIdString))
+        {
+            return;
+        }
+
+        var userId = Guid.Parse(userIdString);
+        await _connectionManager.RemoveAllConnectionsAsync(userId);
+
         if (!await _connectionManager.IsUserOnlineAsync(userId))
         {
             await Clients.All.SendAsync("UserOffline", userId);
@@ -34,6 +50,7 @@ UserConnectionManager _connectionManager, ICurrentUserService _currentUserServic
 
         await base.OnDisconnectedAsync(exception);
     }
+
 
     public async Task JoinChat(Guid chatId)
     {

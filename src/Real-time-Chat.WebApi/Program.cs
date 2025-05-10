@@ -62,7 +62,7 @@ app.MapMessageEndpoints();
 app.MapUserEndpoints();
 
 // Map SignalR hub
-app.MapHub<ChatHub>("/api/chatHub");
+app.MapHub<ChatHub>("/api/chatHub").RequireAuthorization();
 
 app.Run();
 

@@ -70,11 +70,19 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.signalRService.messageReceived$.subscribe((message) => {
       if (this.selectedChat && message.chatId === this.selectedChat.id) {
         this.messages.push(message);
-        this.messages.sort((a, b) => 
-          new Date(a.sendAt).getTime() - new Date(b.sendAt).getTime()
+        this.messages.sort(
+          (a, b) => new Date(a.sendAt).getTime() - new Date(b.sendAt).getTime()
         );
       }
     });
+
+    this.signalRService.userStatus$.subscribe(statusMap => {
+      this.users = this.users.map(user => ({
+        ...user,
+        isOnline: statusMap[user.id] || false
+      }));
+    });
+    
   }
 
   ngOnDestroy(): void {
@@ -106,8 +114,8 @@ export class ChatListComponent implements OnInit, OnDestroy {
   openChat(chat: Chat) {
     this.selectedChat = chat;
     this.chatService.getChatMessages(chat.id).subscribe((messages) => {
-      this.messages = messages.sort((a, b) => 
-        new Date(a.sendAt).getTime() - new Date(b.sendAt).getTime()
+      this.messages = messages.sort(
+        (a, b) => new Date(a.sendAt).getTime() - new Date(b.sendAt).getTime()
       );
     });
   }

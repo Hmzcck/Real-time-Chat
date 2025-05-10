@@ -1,7 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 import { UserService } from '../../services/user.service';
 import { SignalRService } from '../../services/signal-r.service';
+import { AuthenticationService } from '../../services/authentication.service';
 import { User } from '../../models/user.model';
 import { Chat, ChatCreation } from '../../models/chat.model';
 import { Message, MessageSend } from '../../models/message.model';
@@ -12,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatListModule } from '@angular/material/list';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -31,11 +34,13 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatProgressSpinnerModule,
     FormsModule,
     MatListModule,
+    MatTooltipModule,
   ],
 })
 export class ChatListComponent implements OnInit, OnDestroy {
   users: User[] = [];
   currentUserId = '';
+  currentUser: any;
   selectedChat: Chat | null = null;
   messages: Message[] = [];
   newMessage = '';
@@ -43,15 +48,18 @@ export class ChatListComponent implements OnInit, OnDestroy {
   constructor(
     private readonly userService: UserService,
     private readonly chatService: ChatService,
-    private readonly signalRService: SignalRService
+    private readonly signalRService: SignalRService,
+    private readonly authService: AuthenticationService,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
     this.signalRService.start();
 
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      this.currentUserId = JSON.parse(currentUser).userId;
+    const currentUserStr = localStorage.getItem('currentUser');
+    if (currentUserStr) {
+      this.currentUser = JSON.parse(currentUserStr);
+      this.currentUserId = this.currentUser.userId;
     }
 
     this.userService.getUsers().subscribe((users) => {
@@ -102,6 +110,11 @@ export class ChatListComponent implements OnInit, OnDestroy {
         new Date(a.sendAt).getTime() - new Date(b.sendAt).getTime()
       );
     });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   sendMessage() {

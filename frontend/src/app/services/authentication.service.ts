@@ -43,10 +43,13 @@ export class AuthenticationService {
       );
   }
 
-  register(userData: RegisterRequest): Observable<RegisterResponse> {
+  register(userData: RegisterRequest | FormData): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(
       `${this.apiUrl}/register`,
-      userData
+      userData,
+      {
+        headers: userData instanceof FormData ? {} : { 'Content-Type': 'application/json' }
+      }
     );
   }
 

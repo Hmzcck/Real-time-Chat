@@ -1,25 +1,34 @@
 <div class="chat-container">
-  <!-- Kullanıcı listesi -->
-  <mat-card class="user-list">
-    <mat-card-title>Kullanıcılar</mat-card-title>
+  <!-- Profile Section -->
+  <div class="profile-section">
+    <div class="profile-info">
+      <img class="profile-avatar" [src]="'http://localhost:5065/avatars/' + currentUser?.avatarPath" [alt]="currentUser?.userName">
+      <span class="profile-name">{{ currentUser?.userName }}</span>
+    </div>
+    <button mat-icon-button color="warn" (click)="logout()" matTooltip="Log out">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </div>
+  <div class="main-content">
+    <!-- Users List -->
+    <mat-card class="user-list">
+    <mat-card-title>Users</mat-card-title>
     <mat-nav-list>
-      <mat-list-item
-        *ngFor="let user of users"
-        (click)="onUserClick(user)"
-        style="cursor: pointer"
-      >
-        <img matListAvatar [src]="user.avatarPath" alt="{{ user.userName }}" />
-        <div matLine>{{ user.userName }}</div>
-        <mat-icon
-          matSuffix
-          [ngStyle]="{ color: user.isOnline ? '#4caf50' : '#9e9e9e' }"
-          fontIcon="circle"
-        ></mat-icon>
-      </mat-list-item>
+      <div class="user-list-item" *ngFor="let user of users" (click)="onUserClick(user)">
+        <img class="user-avatar" [src]="'http://localhost:5065/avatars/' + user.avatarPath" alt="{{ user.userName }}" />
+        <div class="user-info">
+          <span class="user-name">{{ user.userName }}</span>
+          <mat-icon
+            class="status-icon"
+            [ngStyle]="{ color: user.isOnline ? '#4caf50' : '#9e9e9e' }"
+            fontIcon="circle"
+          ></mat-icon>
+        </div>
+      </div>
     </mat-nav-list>
   </mat-card>
 
-  <!-- Sohbet penceresi -->
+  <!-- Chat Window -->
   <div class="chat-window" *ngIf="selectedChat">
     <div class="messages">
       <div
@@ -47,7 +56,7 @@
           matInput
           [(ngModel)]="newMessage"
           (keydown.enter)="sendMessage()"
-          placeholder="Mesajınızı yazın..."
+          placeholder="Enter your message..."
         />
       </mat-form-field>
       <button
@@ -58,6 +67,7 @@
       >
         <mat-icon>send</mat-icon>
       </button>
+    </div>
     </div>
   </div>
 </div>

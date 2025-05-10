@@ -18,9 +18,9 @@ export type LoginResponse = {
     password: string;
   }
   
-  export type RegisterRequest = {
-    userName: string;
-    email: string;
-    password: string;
-  }
-  
+export type RegisterRequest = {
+  userName: string;
+  email: string;
+  password: string;
+  avatarFile?: File;  // Optional since we'll use default.png if not provided
+}

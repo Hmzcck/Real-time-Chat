@@ -39,11 +39,20 @@ public static class AuthenticationEndpoints
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // Register endpoint
-        group.MapPost("/register", async (RegiserCommand request, IMediator mediator) =>
+        group.MapPost("/register", async (HttpContext context, IMediator mediator) =>
         {
             try
             {
-                var result = await mediator.Send(request);
+                var form = await context.Request.ReadFormAsync();
+                var command = new RegiserCommand
+                {
+                    UserName = form["userName"]!,
+                    Email = form["email"]!,
+                    Password = form["password"]!,
+                    AvatarFile = form.Files.GetFile("avatarFile")
+                };
+                
+                var result = await mediator.Send(command);
                 return Results.Created($"/api/users/{result.Id}", result);
             }
             catch (Exception ex)

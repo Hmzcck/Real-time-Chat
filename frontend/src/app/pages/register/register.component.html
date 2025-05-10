@@ -59,6 +59,25 @@
               Please confirm your password
             </mat-error>
           </mat-form-field>
+
+          <div class="avatar-upload">
+            <label for="avatar-input" class="avatar-label">
+              <div class="avatar-preview" *ngIf="avatarPreview">
+                <img [src]="avatarPreview" alt="Avatar preview" />
+              </div>
+              <div class="avatar-placeholder" *ngIf="!avatarPreview">
+                <mat-icon>add_photo_alternate</mat-icon>
+                <span>Choose Avatar (Optional)</span>
+              </div>
+            </label>
+            <input
+              type="file"
+              id="avatar-input"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              style="display: none;"
+            />
+          </div>
   
           <button
             mat-raised-button
@@ -79,4 +98,3 @@
       </mat-card-actions>
     </mat-card>
   </div>
-  

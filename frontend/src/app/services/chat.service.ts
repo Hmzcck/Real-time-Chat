@@ -45,4 +45,8 @@ export class ChatService {
   sendMessage(request: MessageSend): Observable<Message> {
     return this.http.post<Message>(`${this.apiUrl}/messages`, request);
   }
+
+  leaveChat(chatId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/chats/${chatId}/leave`);
+  }
 }

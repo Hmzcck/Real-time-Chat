@@ -1,0 +1,94 @@
+<div class="create-group-dialog">
+  <h2 mat-dialog-title>Create Group Chat</h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="groupForm">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Group Name</mat-label>
+        <input matInput formControlName="name" placeholder="Enter group name" />
+        <mat-error *ngIf="groupForm.get('name')?.hasError('required')">
+          Group name is required
+        </mat-error>
+        <mat-error *ngIf="groupForm.get('name')?.hasError('minlength')">
+          Group name must be at least 3 characters
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Search Users</mat-label>
+        <input
+          matInput
+          [formControl]="searchControl"
+          placeholder="Type to search users"
+        />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <div class="user-list">
+        <mat-selection-list
+          #userList
+          (selectionChange)="onSelectionListChange($event)"
+        >
+          <mat-list-option *ngFor="let user of filteredUsers" [value]="user">
+            <div class="user-item">
+              <img
+                [src]="'http://localhost:5065/avatars/' + user.avatarPath"
+                [alt]="user.userName"
+                class="user-avatar"
+              />
+              <span class="user-name">{{ user.userName }}</span>
+            </div>
+          </mat-list-option>
+        </mat-selection-list>
+      </div>
+
+      <div class="selected-users" *ngIf="selectedUsers.length > 0">
+        <h3>Selected Users ({{ selectedUsers.length }})</h3>
+        <div class="selected-chips">
+          <div class="mat-mdc-chip-set">
+            <mat-chip-grid>
+              <mat-chip-row
+                *ngFor="let user of selectedUsers"
+                (removed)="toggleUserSelection(user)"
+                [removable]="true"
+              >
+                {{ user.userName }}
+                <button matChipRemove>
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-row>
+            </mat-chip-grid>
+          </div>
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <div
+    style="
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      background: #f8f8f8;
+    "
+  >
+    <h4>Form Debugging:</h4>
+    <p>Form Valid: {{ groupForm.valid }}</p>
+    <p>Name Control Valid: {{ groupForm.get("name")?.valid }}</p>
+    <p>Name Control Value: "{{ groupForm.get("name")?.value }}"</p>
+    <p>Name Control Errors: {{ groupForm.get("name")?.errors | json }}</p>
+    <p>Selected Users: {{ selectedUsers.length }}</p>
+  </div>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onSubmit()"
+      [disabled]="!groupForm.valid || selectedUsers.length === 0"
+    >
+      Create Group
+    </button>
+  </mat-dialog-actions>
+</div>

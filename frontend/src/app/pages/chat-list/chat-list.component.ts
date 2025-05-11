@@ -1,14 +1,14 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthenticationService } from '../../services/authentication.service';
 import { ChatService } from '../../services/chat.service';
 import { UserService } from '../../services/user.service';
 import { SignalRService } from '../../services/signal-r.service';
-import { AuthenticationService } from '../../services/authentication.service';
 import { User } from '../../models/user.model';
 import { Chat, ChatCreation } from '../../models/chat.model';
 import { Message, MessageSend } from '../../models/message.model';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,28 +17,32 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatListModule } from '@angular/material/list';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
+import { CreateGroupChatDialogComponent } from '../../components/create-group-chat-dialog/create-group-chat-dialog.component';
 
 @Component({
   selector: 'app-chat-list',
   templateUrl: './chat-list.component.html',
   styleUrls: ['./chat-list.component.css'],
+  standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    FormsModule,
     MatListModule,
     MatTooltipModule,
-  ],
+    MatDialogModule
+]
 })
 export class ChatListComponent implements OnInit, OnDestroy {
   users: User[] = [];
+  groupChats: Chat[] = [];
   currentUserId = '';
   currentUser: any;
   selectedChat: Chat | null = null;
@@ -46,11 +50,12 @@ export class ChatListComponent implements OnInit, OnDestroy {
   newMessage = '';
 
   constructor(
-    private readonly userService: UserService,
-    private readonly chatService: ChatService,
-    private readonly signalRService: SignalRService,
-    private readonly authService: AuthenticationService,
-    private readonly router: Router
+    private userService: UserService,
+    private chatService: ChatService,
+    private signalRService: SignalRService,
+    private authService: AuthenticationService,
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -62,12 +67,17 @@ export class ChatListComponent implements OnInit, OnDestroy {
       this.currentUserId = this.currentUser.userId;
     }
 
-    this.userService.getUsers().subscribe((users) => {
-      this.users = users.filter((u) => u.id !== this.currentUserId);
+    // Load users and chats
+    this.userService.getUsers().subscribe(users => {
+      this.users = users.filter(u => u.id !== this.currentUserId);
+    });
+
+    this.chatService.getChats().subscribe(chats => {
+      this.groupChats = chats.filter(chat => !chat.isPrivate);
     });
 
     // Subscribe to real-time message updates
-    this.signalRService.messageReceived$.subscribe((message) => {
+    this.signalRService.messageReceived$.subscribe(message => {
       if (this.selectedChat && message.chatId === this.selectedChat.id) {
         this.messages.push(message);
         this.messages.sort(
@@ -82,7 +92,24 @@ export class ChatListComponent implements OnInit, OnDestroy {
         isOnline: statusMap[user.id] || false
       }));
     });
-    
+
+    // Subscribe to user left chat notifications
+    this.signalRService.userLeftChat$.subscribe(data => {
+      if (this.selectedChat && data.chatId === this.selectedChat.id) {
+        // If current user left, close the chat
+        if (data.userId === this.currentUserId) {
+          this.selectedChat = null;
+          this.messages = [];
+          // Remove from group chats list
+          this.groupChats = this.groupChats.filter(chat => chat.id !== data.chatId);
+        } else {
+          // Update the selected chat's members list if available
+          this.chatService.getChatDetails(data.chatId).subscribe(updatedChat => {
+            this.selectedChat = updatedChat;
+          });
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -111,6 +138,28 @@ export class ChatListComponent implements OnInit, OnDestroy {
     });
   }
 
+  leaveChat(chat: Chat) {
+    if (chat.isPrivate) {
+      return;
+    }
+
+    this.chatService.leaveChat(chat.id).subscribe({
+      next: () => {
+        // Remove from group chats list immediately
+        this.groupChats = this.groupChats.filter(c => c.id !== chat.id);
+        // If this is the currently selected chat, clear it
+        if (this.selectedChat && this.selectedChat.id === chat.id) {
+          this.selectedChat = null;
+          this.messages = [];
+        }
+        this.signalRService.leaveChat(chat.id);
+      },
+      error: (error) => {
+        console.error('Error leaving chat:', error);
+      }
+    });
+  }
+
   openChat(chat: Chat) {
     this.selectedChat = chat;
     this.chatService.getChatMessages(chat.id).subscribe((messages) => {
@@ -120,9 +169,25 @@ export class ChatListComponent implements OnInit, OnDestroy {
     });
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  createGroupChat() {
+    const dialogRef = this.dialog.open(CreateGroupChatDialogComponent, {
+      width: '500px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const request: ChatCreation = {
+          name: result.name,
+          isPrivate: false,
+          initialMemberIds: result.users.map((user: User) => user.id)
+        };
+
+        this.chatService.createChat(request).subscribe(newChat => {
+          this.openChat(newChat);
+        });
+      }
+    });
   }
 
   sendMessage() {
@@ -135,5 +200,10 @@ export class ChatListComponent implements OnInit, OnDestroy {
 
     this.signalRService.sendMessage(request);
     this.newMessage = '';
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

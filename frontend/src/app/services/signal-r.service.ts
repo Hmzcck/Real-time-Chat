@@ -13,9 +13,15 @@ export class SignalRService {
   private readonly userStatusSource = new BehaviorSubject<{
     [key: string]: boolean;
   }>({});
+  private readonly userLeftChatSource = new Subject<{
+    chatId: string;
+    userId: string;
+    username: string;
+  }>();
 
   messageReceived$ = this.messageReceivedSource.asObservable();
   userStatus$ = this.userStatusSource.asObservable();
+  userLeftChat$ = this.userLeftChatSource.asObservable();
 
   constructor() {
     this.hubConnection = new HubConnectionBuilder()
@@ -53,8 +59,16 @@ export class SignalRService {
       userIds.forEach(id => statusMap[id] = true);
       this.userStatusSource.next(statusMap);
     });
+
+    this.hubConnection.on('UserLeftChat', (data: { chatId: string; userId: string; username: string }) => {
+      this.userLeftChatSource.next(data);
+    });
+
+    this.hubConnection.on('ChatError', (data: { chatId: string; error: string }) => {
+      console.error('Chat error:', data);
+    });
   }
-  
+
 
   async start(): Promise<void> {
     try {
@@ -80,6 +94,14 @@ export class SignalRService {
       await this.hubConnection.invoke('SendMessage', message.chatId, message.content);
     } catch (error) {
       console.error('Error sending message:', error);
+    }
+  }
+
+  async leaveChat(chatId: string): Promise<void> {
+    try {
+      await this.hubConnection.invoke('LeaveChat', chatId);
+    } catch (error) {
+      console.error('Error leaving chat:', error);
     }
   }
 }

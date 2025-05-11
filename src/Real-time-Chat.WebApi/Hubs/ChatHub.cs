@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using MediatR;
 using Real_time_Chat.Application.Features.Messages.Commands;
+using Real_time_Chat.Application.Features.Chats.Commands;
 using Real_time_Chat.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -59,7 +60,37 @@ UserConnectionManager _connectionManager, ICurrentUserService _currentUserServic
 
     public async Task LeaveChat(Guid chatId)
     {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
+        var command = new LeaveChatCommand(chatId);
+        var result = await _mediator.Send(command);
+
+        if (result.Success)
+        {
+            // Remove user from the SignalR group
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
+
+            // Get user details for the notification
+            var user = await userManager.FindByIdAsync(result.UserId.ToString());
+            if (user != null)
+            {
+                // Notify remaining chat members
+                await Clients.Group(chatId.ToString()).SendAsync("UserLeftChat", new
+                {
+                    ChatId = result.ChatId,
+                    UserId = result.UserId,
+                    Username = user.UserName
+                });
+            }
+
+        }
+        else
+        {
+            // Notify the user of the error
+            await Clients.Caller.SendAsync("ChatError", new
+            {
+                ChatId = result.ChatId,
+                Error = result.Error
+            });
+        }
     }
 
     private async Task<List<Guid>> GetChatParticipantIds(Guid chatId)

@@ -124,5 +124,28 @@ public static class ChatsEndpoints
         .Produces<GetChatDetailsQueryResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        // Leave chat
+        group.MapDelete("/{chatId}/leave", async (Guid chatId, IMediator mediator) =>
+        {
+            try
+            {
+                var result = await mediator.Send(new LeaveChatCommand(chatId));
+                if (!result.Success)
+                {
+                    return Results.BadRequest(new { error = result.Error });
+                }
+                return Results.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+            }
+        })
+        .WithName("LeaveChat")
+        .WithDescription("Removes the current user from a chat group")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 }

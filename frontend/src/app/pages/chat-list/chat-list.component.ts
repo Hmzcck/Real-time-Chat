@@ -95,16 +95,22 @@ export class ChatListComponent implements OnInit, OnDestroy {
       }
 
       // Last message update for the chat
-      const chatToUpdate = this.allChats.find((c: Chat) => c.id === message.chatId);
+      const chatToUpdate = this.allChats.find(
+        (c: Chat) => c.id === message.chatId
+      );
       if (chatToUpdate) {
         chatToUpdate.lastMessage = message.content;
         chatToUpdate.lastMessageSender = message.senderUserName;
         chatToUpdate.lastMessageAt = message.sendAt;
-        
+
         // Re-sort chats to move the updated chat to top
         this.allChats.sort((a, b) => {
-          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+          const timeA = a.lastMessageAt
+            ? new Date(a.lastMessageAt).getTime()
+            : 0;
+          const timeB = b.lastMessageAt
+            ? new Date(b.lastMessageAt).getTime()
+            : 0;
           return timeB - timeA;
         });
       }
@@ -124,10 +130,10 @@ export class ChatListComponent implements OnInit, OnDestroy {
         if (data.userId === this.currentUserId) {
           this.selectedChat = null;
           this.messages = [];
-        // Remove from chats list
-        this.allChats = this.allChats.filter(
-          (chat) => chat.id !== data.chatId
-        );
+          // Remove from chats list
+          this.allChats = this.allChats.filter(
+            (chat) => chat.id !== data.chatId
+          );
         } else {
           // Update the selected chat's members list if available
           this.chatService
@@ -209,7 +215,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
           name: result.name,
           isPrivate: false,
           initialMemberIds: result.users.map((user: User) => user.id),
-          imagePath: result.imagePath
+          imagePath: result.imagePath,
         };
 
         this.chatService.createChat(request).subscribe((newChat) => {
@@ -236,5 +242,15 @@ export class ChatListComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  getUserColorClass(userId: string): string {
+    // take the hash of userId and convert it to a constant class
+    const hash = Array.from(userId).reduce(
+      (acc, char) => acc + char.charCodeAt(0),
+      0
+    );
+    const colorIndex = (hash % 5) + 1; // 1–5
+    return `user-color-${colorIndex}`;
   }
 }

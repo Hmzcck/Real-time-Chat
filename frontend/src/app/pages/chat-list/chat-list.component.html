@@ -25,7 +25,9 @@
             [src]="'http://localhost:5065/avatars/' + chat.imagePath"
             [alt]="chat.name"
           />
-          <mat-icon *ngIf="!chat.imagePath" matListItemAvatar>{{chat.isPrivate ? 'person' : 'group'}}</mat-icon>
+          <mat-icon *ngIf="!chat.imagePath" matListItemAvatar>{{
+            chat.isPrivate ? "person" : "group"
+          }}</mat-icon>
           <div matLine>{{ chat.name }}</div>
           <div matLine class="last-message">
             {{
@@ -35,7 +37,9 @@
             }}
           </div>
           <div matListItemMeta>
-            <span class="member-count" *ngIf="!chat.isPrivate">{{chat.memberCount}} members</span>
+            <span class="member-count" *ngIf="!chat.isPrivate"
+              >{{ chat.memberCount }} members</span
+            >
             <button
               mat-icon-button
               *ngIf="!chat.isPrivate"
@@ -99,6 +103,11 @@
         *ngFor="let message of messages"
         class="message"
         [class.own-message]="message.senderId === currentUserId"
+        [ngClass]="
+          message.senderId !== currentUserId && !selectedChat?.isPrivate
+            ? getUserColorClass(message.senderId)
+            : ''
+        "
       >
         <div
           *ngIf="

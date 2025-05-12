@@ -88,22 +88,6 @@
     </form>
   </mat-dialog-content>
 
-  <div
-    style="
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin: 10px 0;
-      background: #f8f8f8;
-    "
-  >
-    <h4>Form Debugging:</h4>
-    <p>Form Valid: {{ groupForm.valid }}</p>
-    <p>Name Control Valid: {{ groupForm.get("name")?.valid }}</p>
-    <p>Name Control Value: "{{ groupForm.get("name")?.value }}"</p>
-    <p>Name Control Errors: {{ groupForm.get("name")?.errors | json }}</p>
-    <p>Selected Users: {{ selectedUsers.length }}</p>
-  </div>
-
   <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">Cancel</button>
     <button

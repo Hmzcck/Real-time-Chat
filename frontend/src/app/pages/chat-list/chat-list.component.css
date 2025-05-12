@@ -1,3 +1,11 @@
+.user-color-1 { background-color: #e1f5fe; }
+.user-color-2 { background-color: #fce4ec; }
+.user-color-3 { background-color: #f3e5f5; }
+.user-color-4 { background-color: #e8f5e9; }
+.user-color-5 { background-color: #fff3e0; }
+/* Currently 5 different colors */
+
+
 .chat-list-container {
   height: 100vh;
   display: grid;
@@ -82,6 +90,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .chat-header {

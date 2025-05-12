@@ -1,11 +1,13 @@
-//TODO change names according to backend
-
 export interface Chat {
   id: string;
   name: string;
   isPrivate: boolean;
-  participants: User[];
-  lastMessage?: Message;
+  members: string[];
+  lastMessage?: string;
+  lastMessageAt?: string;
+  lastMessageSender?: string;
+  memberCount: number;
+  imagePath?: string;
 }
 
 export interface ChatParticipant {
@@ -16,6 +18,7 @@ export interface ChatParticipant {
 export interface ChatCreation {
   name: string;
   isPrivate: boolean;
+  imagePath?: string;
   initialMemberIds: string[];
 }
 

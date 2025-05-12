@@ -14,49 +14,62 @@
 
   <div class="lists-container">
     <div class="section-header">
-      <h3>Private Chats</h3>
+      <h3>All Chats</h3>
     </div>
-    <div class="users-container">
-    <mat-nav-list>
-      <mat-list-item
-        *ngFor="let user of users"
-        (click)="onUserClick(user)"
-        [class.online]="user.isOnline"
-      >
-        <img
-          matListItemAvatar
-          [src]="'http://localhost:5065/avatars/' + user.avatarPath"
-          [alt]="user.userName"
-        />
-        <span matListItemTitle>{{ user.userName }}</span>
-        <div
-          matListItemMeta
-          class="status-indicator"
-          [class.online]="user.isOnline"
-        ></div>
-      </mat-list-item>
-    </mat-nav-list>
+    <div class="chats-container">
+      <mat-nav-list>
+        <mat-list-item *ngFor="let chat of allChats" (click)="openChat(chat)">
+          <img
+            *ngIf="chat.imagePath"
+            matListItemAvatar
+            [src]="'http://localhost:5065/avatars/' + chat.imagePath"
+            [alt]="chat.name"
+          />
+          <mat-icon *ngIf="!chat.imagePath" matListItemAvatar>{{chat.isPrivate ? 'person' : 'group'}}</mat-icon>
+          <div matLine>{{ chat.name }}</div>
+          <div matLine class="last-message">
+            {{
+              chat.lastMessageSender
+                ? chat.lastMessageSender + ": " + chat.lastMessage
+                : "No messages"
+            }}
+          </div>
+          <div matListItemMeta>
+            <span class="member-count" *ngIf="!chat.isPrivate">{{chat.memberCount}} members</span>
+            <button
+              mat-icon-button
+              *ngIf="!chat.isPrivate"
+              (click)="$event.stopPropagation(); leaveChat(chat)"
+              matTooltip="Leave group"
+            >
+              <mat-icon>exit_to_app</mat-icon>
+            </button>
+          </div>
+        </mat-list-item>
+      </mat-nav-list>
     </div>
 
     <div class="section-header">
-      <h3>Group Chats</h3>
+      <h3>Users</h3>
     </div>
-    <div class="group-chats-container">
+    <div class="users-container">
       <mat-nav-list>
         <mat-list-item
-          *ngFor="let chat of groupChats"
-          (click)="openChat(chat)"
+          *ngFor="let user of users"
+          (click)="onUserClick(user)"
+          [class.online]="user.isOnline"
         >
-          <mat-icon matListItemAvatar>group</mat-icon>
-          <span matListItemTitle>{{ chat.name }}</span>
-          <button 
-            mat-icon-button 
-            matListItemMeta 
-            (click)="$event.stopPropagation(); leaveChat(chat)"
-            matTooltip="Leave group"
-          >
-            <mat-icon>exit_to_app</mat-icon>
-          </button>
+          <img
+            matListItemAvatar
+            [src]="'http://localhost:5065/avatars/' + user.avatarPath"
+            [alt]="user.userName"
+          />
+          <span matListItemTitle>{{ user.userName }}</span>
+          <div
+            matListItemMeta
+            class="status-indicator"
+            [class.online]="user.isOnline"
+          ></div>
         </mat-list-item>
       </mat-nav-list>
     </div>
@@ -64,11 +77,16 @@
 
   <div class="chat-container" *ngIf="selectedChat">
     <div class="chat-header">
-      <h2>{{ selectedChat.name || "Chat" }}</h2>
+      <div class="chat-header-content">
+        <h2>{{ selectedChat.name || "Chat" }}</h2>
+        <div class="group-members" *ngIf="!selectedChat.isPrivate">
+          Members: {{ getGroupMembers(selectedChat) }}
+        </div>
+      </div>
       <div class="chat-header-actions" *ngIf="!selectedChat.isPrivate">
-        <button 
-          mat-icon-button 
-          (click)="leaveChat(selectedChat)" 
+        <button
+          mat-icon-button
+          (click)="leaveChat(selectedChat)"
           matTooltip="Leave group"
         >
           <mat-icon>exit_to_app</mat-icon>
@@ -82,7 +100,14 @@
         class="message"
         [class.own-message]="message.senderId === currentUserId"
       >
-        <div *ngIf="selectedChat && !selectedChat.isPrivate && message.senderId !== currentUserId" class="message-sender">
+        <div
+          *ngIf="
+            selectedChat &&
+            !selectedChat.isPrivate &&
+            message.senderId !== currentUserId
+          "
+          class="message-sender"
+        >
           {{ message.senderUserName }}
         </div>
         <div class="message-content">

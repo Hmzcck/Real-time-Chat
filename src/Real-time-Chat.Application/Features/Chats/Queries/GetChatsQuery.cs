@@ -13,7 +13,10 @@ public sealed record GetChatsQueryResponse
     public bool IsPrivate { get; set; }
     public DateTimeOffset? LastMessageAt { get; set; }
     public string? LastMessage { get; set; }
+    public string? LastMessageSender { get; set; }
     public int MemberCount { get; set; }
+    public string? ImagePath { get; set; }
+    public List<string> Members { get; set; } = [];
 }
 
 internal sealed class GetChatsQueryHandler(IApplicationDbContext applicationDbContext,
@@ -28,7 +31,11 @@ ICurrentUserService currentUserService) : IRequestHandler<GetChatsQuery, List<Ge
             .Select(c => new GetChatsQueryResponse
             {
                 Id = c.Id,
-                Name = c.Name,
+                Name = !c.IsPrivate ? c.Name :
+                    c.UserChats
+                        .Where(uc => uc.UserId != userId)
+                        .Select(uc => uc.User.UserName)
+                        .FirstOrDefault() ?? "",
                 IsPrivate = c.IsPrivate,
                 LastMessageAt = c.Messages
                     .OrderByDescending(m => m.SendAt)
@@ -38,7 +45,19 @@ ICurrentUserService currentUserService) : IRequestHandler<GetChatsQuery, List<Ge
                     .OrderByDescending(m => m.SendAt)
                     .Select(m => m.Content)
                     .FirstOrDefault(),
-                MemberCount = c.UserChats.Count
+                LastMessageSender = c.Messages
+                    .OrderByDescending(m => m.SendAt)
+                    .Select(m => m.Sender.UserName)
+                    .FirstOrDefault(),
+                MemberCount = c.UserChats.Count,
+                ImagePath = !c.IsPrivate ? c.ImagePath :
+                    c.UserChats
+                        .Where(uc => uc.UserId != userId)
+                        .Select(uc => uc.User.AvatarPath)
+                        .FirstOrDefault(),
+                Members = c.UserChats
+                    .Select(uc => uc.User.UserName ?? string.Empty)
+                    .ToList(),
             })
             .OrderByDescending(c => c.LastMessageAt ?? DateTimeOffset.MinValue) // Handles nulls
             .ToListAsync(cancellationToken);

@@ -7,6 +7,7 @@ namespace Real_time_Chat.Application.Features.Chats.Commands;
 public sealed record CreateChatCommand(
     string Name,
     bool IsPrivate,
+    string? ImagePath,
     List<Guid> InitialMemberIds) : IRequest<CreateChatCommandResponse>;
 
 public sealed record CreateChatCommandResponse
@@ -14,6 +15,7 @@ public sealed record CreateChatCommandResponse
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public bool IsPrivate { get; set; }
+    public string? ImagePath { get; set; }
 }
 
 internal sealed class CreateChatCommandHandler(IApplicationDbContext applicationDbContext,
@@ -26,7 +28,8 @@ ICurrentUserService currentUserService) : IRequestHandler<CreateChatCommand, Cre
         var chat = new Chat
         {
             Name = request.Name,
-            IsPrivate = request.IsPrivate
+            IsPrivate = request.IsPrivate,
+            ImagePath = request.IsPrivate ? null : (request.ImagePath ?? "default_group_image.png"),
         };
 
         // Add creator and initial members

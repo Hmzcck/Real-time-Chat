@@ -37,17 +37,21 @@ import { CreateGroupChatDialogComponent } from '../../components/create-group-ch
     MatProgressSpinnerModule,
     MatListModule,
     MatTooltipModule,
-    MatDialogModule
-]
+    MatDialogModule,
+  ],
 })
 export class ChatListComponent implements OnInit, OnDestroy {
   users: User[] = [];
-  groupChats: Chat[] = [];
+  allChats: Chat[] = [];
   currentUserId = '';
   currentUser: any;
   selectedChat: Chat | null = null;
   messages: Message[] = [];
   newMessage = '';
+
+  getGroupMembers(chat: Chat): string {
+    return chat.members?.join(', ') || '';
+  }
 
   constructor(
     private userService: UserService,
@@ -68,45 +72,69 @@ export class ChatListComponent implements OnInit, OnDestroy {
     }
 
     // Load users and chats
-    this.userService.getUsers().subscribe(users => {
-      this.users = users.filter(u => u.id !== this.currentUserId);
+    this.userService.getUsers().subscribe((users) => {
+      this.users = users.filter((u) => u.id !== this.currentUserId);
     });
 
-    this.chatService.getChats().subscribe(chats => {
-      this.groupChats = chats.filter(chat => !chat.isPrivate);
+    this.chatService.getChats().subscribe((chats) => {
+      this.allChats = chats.sort((a, b) => {
+        // Sort by last message time, handling nulls
+        const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+        const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+        return timeB - timeA;
+      });
     });
 
     // Subscribe to real-time message updates
-    this.signalRService.messageReceived$.subscribe(message => {
+    this.signalRService.messageReceived$.subscribe((message) => {
       if (this.selectedChat && message.chatId === this.selectedChat.id) {
         this.messages.push(message);
         this.messages.sort(
           (a, b) => new Date(a.sendAt).getTime() - new Date(b.sendAt).getTime()
         );
       }
+
+      // Last message update for the chat
+      const chatToUpdate = this.allChats.find((c: Chat) => c.id === message.chatId);
+      if (chatToUpdate) {
+        chatToUpdate.lastMessage = message.content;
+        chatToUpdate.lastMessageSender = message.senderUserName;
+        chatToUpdate.lastMessageAt = message.sendAt;
+        
+        // Re-sort chats to move the updated chat to top
+        this.allChats.sort((a, b) => {
+          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+          return timeB - timeA;
+        });
+      }
     });
 
-    this.signalRService.userStatus$.subscribe(statusMap => {
-      this.users = this.users.map(user => ({
+    this.signalRService.userStatus$.subscribe((statusMap) => {
+      this.users = this.users.map((user) => ({
         ...user,
-        isOnline: statusMap[user.id] || false
+        isOnline: statusMap[user.id] || false,
       }));
     });
 
     // Subscribe to user left chat notifications
-    this.signalRService.userLeftChat$.subscribe(data => {
+    this.signalRService.userLeftChat$.subscribe((data) => {
       if (this.selectedChat && data.chatId === this.selectedChat.id) {
         // If current user left, close the chat
         if (data.userId === this.currentUserId) {
           this.selectedChat = null;
           this.messages = [];
-          // Remove from group chats list
-          this.groupChats = this.groupChats.filter(chat => chat.id !== data.chatId);
+        // Remove from chats list
+        this.allChats = this.allChats.filter(
+          (chat) => chat.id !== data.chatId
+        );
         } else {
           // Update the selected chat's members list if available
-          this.chatService.getChatDetails(data.chatId).subscribe(updatedChat => {
-            this.selectedChat = updatedChat;
-          });
+          this.chatService
+            .getChatDetails(data.chatId)
+            .subscribe((updatedChat) => {
+              this.selectedChat = updatedChat;
+            });
         }
       }
     });
@@ -145,8 +173,8 @@ export class ChatListComponent implements OnInit, OnDestroy {
 
     this.chatService.leaveChat(chat.id).subscribe({
       next: () => {
-        // Remove from group chats list immediately
-        this.groupChats = this.groupChats.filter(c => c.id !== chat.id);
+        // Remove from chats list immediately
+        this.allChats = this.allChats.filter((c) => c.id !== chat.id);
         // If this is the currently selected chat, clear it
         if (this.selectedChat && this.selectedChat.id === chat.id) {
           this.selectedChat = null;
@@ -156,7 +184,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error leaving chat:', error);
-      }
+      },
     });
   }
 
@@ -172,18 +200,21 @@ export class ChatListComponent implements OnInit, OnDestroy {
   createGroupChat() {
     const dialogRef = this.dialog.open(CreateGroupChatDialogComponent, {
       width: '500px',
-      disableClose: true
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         const request: ChatCreation = {
           name: result.name,
           isPrivate: false,
-          initialMemberIds: result.users.map((user: User) => user.id)
+          initialMemberIds: result.users.map((user: User) => user.id),
+          imagePath: result.imagePath
         };
 
-        this.chatService.createChat(request).subscribe(newChat => {
+        this.chatService.createChat(request).subscribe((newChat) => {
+          // Add new chat to the list and open it
+          this.allChats.unshift(newChat);
           this.openChat(newChat);
         });
       }

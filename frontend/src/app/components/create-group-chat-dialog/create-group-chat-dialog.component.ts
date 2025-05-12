@@ -44,6 +44,8 @@ export class CreateGroupChatDialogComponent {
   users: User[] = [];
   searchControl = new FormControl('');
   selectedUsers: User[] = [];
+  imagePreview: string | null = null;
+  selectedFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -93,11 +95,63 @@ export class CreateGroupChatDialogComponent {
     return this.selectedUsers.some(u => u.id === user.id);
   }
 
-  onSubmit() {
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.type.startsWith('image/')) {
+        this.selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.imagePreview = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Handle invalid file type
+        alert('Please select an image file');
+      }
+    }
+  }
+
+  removeImage() {
+    this.imagePreview = null;
+    this.selectedFile = null;
+  }
+
+  async onSubmit() {
     if (this.groupForm.valid && this.selectedUsers.length > 0) {
+      let imagePath: string | undefined;
+
+      // If there's a selected file, convert it to base64
+      if (this.selectedFile) {
+        try {
+          const base64String = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const result = e.target?.result;
+              if (typeof result === 'string') {
+                const base64 = result.split(',')[1]; // Remove data:image/* prefix
+                resolve(base64);
+              } else {
+                reject(new Error('Failed to read file'));
+              }
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(this.selectedFile as Blob);
+          });
+
+          imagePath = base64String;
+        } catch (error) {
+          console.error('Error processing image:', error);
+          alert('Failed to process the image');
+          return;
+        }
+      }
+
       this.dialogRef.close({
         name: this.groupForm.get('name')?.value,
-        users: this.selectedUsers
+        users: this.selectedUsers,
+        imagePath: imagePath
       });
     }
   }

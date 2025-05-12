@@ -3,16 +3,40 @@
 
   <mat-dialog-content>
     <form [formGroup]="groupForm">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Group Name</mat-label>
-        <input matInput formControlName="name" placeholder="Enter group name" />
-        <mat-error *ngIf="groupForm.get('name')?.hasError('required')">
-          Group name is required
-        </mat-error>
-        <mat-error *ngIf="groupForm.get('name')?.hasError('minlength')">
-          Group name must be at least 3 characters
-        </mat-error>
-      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Group Name</mat-label>
+          <input matInput formControlName="name" placeholder="Enter group name" />
+          <mat-error *ngIf="groupForm.get('name')?.hasError('required')">
+            Group name is required
+          </mat-error>
+          <mat-error *ngIf="groupForm.get('name')?.hasError('minlength')">
+            Group name must be at least 3 characters
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row image-upload">
+        <div class="preview-container" *ngIf="imagePreview">
+          <img [src]="imagePreview" alt="Group image preview" class="image-preview" />
+          <button mat-icon-button color="warn" (click)="removeImage()" class="remove-image">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <div class="upload-button" *ngIf="!imagePreview">
+          <button mat-stroked-button type="button" (click)="fileInput.click()">
+            <mat-icon>add_photo_alternate</mat-icon>
+            Upload Group Image
+          </button>
+        </div>
+        <input
+          #fileInput
+          type="file"
+          [hidden]="true"
+          accept="image/*"
+          (change)="onFileSelected($event)"
+        />
+      </div>
 
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Search Users</mat-label>

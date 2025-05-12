@@ -18,21 +18,21 @@ A modern real-time chat application built with Angular and .NET Core, featuring 
 ### Authentication
 
 #### Login Page
-![alt text](image.png)
+![alt text](docs/screenshots/LoginPage.png)
 *Login interface with email and password authentication*
 
 #### Register Page
-![alt text](image-1.png)
+![alt text](docs/screenshots/RegisterPage.png)
 *User registration form with required fields*
 
 ### Chat Features
 
 #### Chat List
-![alt text](image-2.png)
+![alt text](docs/screenshots/ChatListPage.png)
 *Overview of all chats (private and group) with last message preview*
 
 #### Create Group Chat
-![alt text](image-3.png)
+![alt text](docs/screenshots/CreateGroupComponent.png)
 *Dialog for creating new group chats*
 
 ## Technical Architecture

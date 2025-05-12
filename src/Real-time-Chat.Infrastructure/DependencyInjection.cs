@@ -9,6 +9,7 @@ using Real_time_Chat.Domain.Entities;
 using Real_time_Chat.Infrastructure.Persistence.Contexts;
 using Real_time_Chat.Infrastructure.Services;
 using Real_time_Chat.Infrastructure.Settings;
+using Real_time_Chat.Infrastructure.Persistence.Seeders;
 
 namespace Real_time_Chat.Infrastructure
 {
@@ -60,6 +61,7 @@ namespace Real_time_Chat.Infrastructure
             // Service Registration
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<DataSeeder>();
 
             return services;
         }

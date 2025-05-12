@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Models;
 using Real_time_Chat.Infrastructure;
+using Real_time_Chat.Infrastructure.Persistence.Seeders;
 using Real_time_Chat.Application;
 using Scalar.AspNetCore;
 using Real_time_Chat.WebApi.Endpoints;
@@ -60,6 +61,12 @@ app.MapAuthEndpoints();
 app.MapChatEndpoints();
 app.MapMessageEndpoints();
 app.MapUserEndpoints();
+
+// Map seed endpoint only in development
+if (app.Environment.IsDevelopment())
+{
+    app.MapSeedEndpoints();
+}
 
 // Map SignalR hub
 app.MapHub<ChatHub>("/api/chatHub").RequireAuthorization();
